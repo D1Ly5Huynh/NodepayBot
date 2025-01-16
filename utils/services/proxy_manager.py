@@ -26,19 +26,14 @@ def load_proxies():
 
 # Prompt the user to decide whether to use proxies
 def get_proxy_choice():
-    while (user_input := input("Do you want to use proxy? (yes/no)? ").strip().lower()) not in ['yes', 'no']:
-        print("Invalid input. Please enter 'yes' or 'no'.")
+    proxies = load_proxies()
 
-    print(f"You selected: {'Yes' if user_input == 'yes' else 'No'}, ENJOY!\n")
+    if not proxies:
+        logger.error(f"{Fore.CYAN}00{Fore.RESET} - {Fore.RED}No proxies found in proxies.txt. Please add valid proxies{Fore.RESET}")
+        return []
 
-    if user_input == 'yes':
-        proxies = load_proxies()
-
-        if not proxies:
-            logger.error(f"{Fore.CYAN}00{Fore.RESET} - {Fore.RED}No proxies found in proxies.txt. Please add valid proxies{Fore.RESET}")
-            return []
-        return proxies
-    return []
+    print("Proxies loaded successfully. ENJOY!\n")
+    return proxies
 
 # Map tokens to proxies, assigning None if proxies are insufficient
 def assign_proxies(tokens, proxies):

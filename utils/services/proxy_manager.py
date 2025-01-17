@@ -25,13 +25,33 @@ def load_proxies():
         return []
 
 # Prompt the user to decide whether to use proxies
+def get_proxy_choice():
+    proxies = load_proxies()
 
+    if not proxies:
+        logger.error(f"{Fore.CYAN}00{Fore.RESET} - {Fore.RED}No proxies found in proxies.txt. Please add valid proxies{Fore.RESET}")
+        return []
+
+    print("Proxies loaded successfully. ENJOY!\n")
+    return proxies
 
 # Map tokens to proxies, assigning None if proxies are insufficient
 
+def assign_proxies(tokens, proxies):
+    if proxies is None:
+        proxies = []
+
+    paired = list(zip(tokens[:len(proxies)], proxies))
+    remaining = [(token, None) for token in tokens[len(proxies):]]
+
+    return paired + remaining
 
 # Extract the hostname (IP address) from a given proxy URL
-
+def get_proxy_ip(proxy_url):
+    try:
+        return urlparse(proxy_url).hostname
+    except Exception:
+        return "Unknown"
 
 # Create SSL context to allow self-signed certificates
 def create_ssl_context():
@@ -42,6 +62,26 @@ def create_ssl_context():
 
 # Get the public IP address, optionally through a proxy
 
+async def get_ip_address(proxy=None):
+    try:
+        proxy_ip = get_proxy_ip(proxy) if proxy else "Unknown"
+        url = "https://api.ipify.org?format=json"
+
+        ssl_context = create_ssl_context()
+
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url, proxy=proxy, ssl=ssl_context) as response:
+
+                if response.status == 200:
+                    result = await response.json()
+                    return result.get("ip", "Unknown")
+
+                return "Unknown"
+    
+    except Exception as e:
+        logger.error(f"{Fore.CYAN}00{Fore.RESET} - {Fore.RED}Request failed: Server disconnected{Fore.RESET}")
+    
+    return proxy_ip
 
 # Resolves IP or proxy for the account
 async def resolve_ip(account):
